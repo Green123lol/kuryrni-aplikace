@@ -2,30 +2,34 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Kurýrní aplikace v7.0</title>
+  <title>Kurýrní aplikace v7.1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: sans-serif; padding: 10px; }
-    #map { height: 300px; border: 1px solid #ccc; border-radius: 8px; margin: 10px 0; }
-    #camera-btn { font-size: 20px; padding: 16px 32px; margin: 10px 0; background-color: #007bff; color: white; border: none; border-radius: 8px; width: 100%; }
-    #camera-btn[disabled] { background-color: #888; }
-    .address { margin: 5px 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; background: #f9f9f9; }
+    body { font-family: sans-serif; margin: 0; }
+    #video-container { position: sticky; top: 0; background: #fff; z-index: 1000; }
+    video { width: 100%; height: 160px; object-fit: cover; border-bottom: 1px solid #ccc; }
+    #map-container { position: sticky; top: 160px; z-index: 999; }
+    #map { height: 200px; border-bottom: 1px solid #ccc; }
+    #camera-btn { display: block; width: 100%; font-size: 20px; padding: 16px 0; background: #007bff; color: white; border: none; }
+    .address { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; cursor: pointer; }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <h1>📦 Kurýrní aplikace (verze 7.0)</h1>
-  <div id="map"></div>
-  <button id="camera-btn">📸 Naskenovat adresu</button>
+  <div id="video-container">
+    <video id="video" autoplay playsinline muted></video>
+    <button id="camera-btn">📸 Naskenovat adresu</button>
+  </div>
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
   <div id="addresses"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
   <script>
     let map = L.map('map').setView([50.08, 14.44], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
     let addresses = JSON.parse(localStorage.getItem("addresses") || "[]");
     let markers = [];
@@ -76,19 +80,16 @@
 
       const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
       if (!clean) { alert("❌ Nenalezena adresa."); return; }
-
       if (addresses.map(a => a.text.toLowerCase()).includes(clean.toLowerCase())) {
         alert("⚠️ Adresa již existuje.");
         return;
       }
-
       geocode(clean);
     }
 
     document.getElementById("camera-btn").onclick = () => scanAddress();
 
-    let video = document.createElement("video");
-    video.setAttribute("playsinline", "");
+    let video = document.getElementById("video");
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
       .then(stream => {
         video.srcObject = stream;
