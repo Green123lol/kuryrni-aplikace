@@ -2,12 +2,13 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Kurýrní aplikace v7.2</title>
+  <title>Kurýrní aplikace v7.3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: sans-serif; margin: 0; }
-    #camera-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
-    video { width: 100%; height: 100%; object-fit: cover; }
+    #camera-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    video { width: 100%; height: 80%; object-fit: cover; }
+    #scan-btn { font-size: 24px; padding: 16px 32px; margin-top: 20px; background: #007bff; color: white; border: none; border-radius: 8px; }
     #map { height: 300px; border-bottom: 1px solid #ccc; }
     #camera-btn { display: block; width: 100%; font-size: 20px; padding: 16px 0; background: #007bff; color: white; border: none; }
     .address { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; cursor: pointer; }
@@ -21,6 +22,7 @@
 
   <div id="camera-overlay">
     <video id="video" autoplay playsinline></video>
+    <button id="scan-btn">📸 Naskenovat nyní</button>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -31,6 +33,7 @@
 
     let addresses = JSON.parse(localStorage.getItem("addresses") || "[]");
     let markers = [];
+    let stream = null;
 
     function addMarker(lat, lng, text) {
       const marker = L.marker([lat, lng]).addTo(map).bindPopup(text);
@@ -69,34 +72,34 @@
         }).catch(() => closeCamera());
     }
 
-    async function scanAddress() {
-      const overlay = document.getElementById("camera-overlay");
+    async function startCamera() {
+      let overlay = document.getElementById("camera-overlay");
       overlay.style.display = "flex";
-
-      let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
       let video = document.getElementById("video");
       video.srcObject = stream;
       await video.play();
-
-      setTimeout(async () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(video, 0, 0);
-        const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
-
-        const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
-        if (!clean) { alert("❌ Nenalezena adresa."); closeCamera(stream); return; }
-        if (addresses.map(a => a.text.toLowerCase()).includes(clean.toLowerCase())) {
-          alert("⚠️ Adresa již existuje."); closeCamera(stream); return;
-        }
-        geocode(clean);
-        closeCamera(stream);
-      }, 1000);
     }
 
-    function closeCamera(stream) {
+    async function scanOCR() {
+      let video = document.getElementById("video");
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+      const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
+
+      const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
+      if (!clean) { alert("❌ Nenalezena adresa."); closeCamera(); return; }
+      if (addresses.map(a => a.text.toLowerCase()).includes(clean.toLowerCase())) {
+        alert("⚠️ Adresa již existuje."); closeCamera(); return;
+      }
+      geocode(clean);
+      closeCamera();
+    }
+
+    function closeCamera() {
       let overlay = document.getElementById("camera-overlay");
       overlay.style.display = "none";
       if (stream && stream.getTracks) {
@@ -104,7 +107,8 @@
       }
     }
 
-    document.getElementById("camera-btn").onclick = () => scanAddress();
+    document.getElementById("camera-btn").onclick = () => startCamera();
+    document.getElementById("scan-btn").onclick = () => scanOCR();
     renderAddresses();
   </script>
 </body>
