@@ -3,7 +3,11 @@ const video = document.getElementById('video');
 const addresses = document.getElementById('addresses');
 let seen = new Set();
 
-navigator.mediaDevices.getUserMedia({ video: true })
+navigator.mediaDevices.getUserMedia({
+  video: {
+    facingMode: { exact: "environment" }
+  }
+})
   .then(stream => video.srcObject = stream)
   .catch(err => alert("Nelze spustit kameru: " + err));
 
