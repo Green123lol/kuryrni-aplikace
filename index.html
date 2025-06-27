@@ -2,18 +2,28 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Kurýrní aplikace – OCR (vylepšená)</title>
+  <title>Kurýrní aplikace – OCR (verze 3)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; }
     video { width: 100%; max-height: 300px; border: 1px solid #ccc; margin-bottom: 1rem; }
     .item { border: 1px solid #ccc; padding: 6px; margin: 4px 0; border-radius: 5px; background: #f9f9f9; }
+    button {
+      font-size: 1.5rem;
+      padding: 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      margin: 1rem 0;
+    }
   </style>
 </head>
 <body>
-  <h2>📷 Skenuj etikety – OCR (zadní kamera + čeština)</h2>
+  <h2>📷 Skenuj etikety – OCR (chytré čtení)</h2>
   <video id="video" autoplay playsinline></video>
-  <button onclick="captureAndRecognize()">📸 Naskenovat</button>
+  <button onclick="captureAndRecognize()">📸 Naskenovat adresu</button>
   <div id="addresses"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
