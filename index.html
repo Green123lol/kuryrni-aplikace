@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Kurýrní aplikace v7.6</title>
+  <title>Kurýrní aplikace v7.7</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: sans-serif; margin: 0; }
@@ -75,17 +75,7 @@
           } else {
             alert("Nepodařilo se najít souřadnice.");
           }
-          closeCamera();
-        }).catch(() => closeCamera());
-    }
-
-    async function startCamera() {
-      let overlay = document.getElementById("camera-overlay");
-      overlay.style.display = "flex";
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
-      let video = document.getElementById("video");
-      video.srcObject = stream;
-      await video.play();
+        });
     }
 
     async function scanOCR() {
@@ -107,13 +97,32 @@
       }
       ctx.putImageData(imageData, 0, 0);
 
-      const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
-      const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
-      if (!clean) { alert("❌ Nenalezena adresa."); return; }
-      if (addresses.map(a => a.text.toLowerCase()).includes(clean.toLowerCase())) {
-        alert("⚠️ Adresa již existuje."); closeCamera(); return;
+      let text = (await Tesseract.recognize(canvas, 'ces')).data.text.trim();
+
+      if (!text) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        text = (await Tesseract.recognize(canvas, 'ces')).data.text.trim();
       }
-      geocode(clean);
+
+      if (!text) { alert("❌ Nenalezena adresa."); return; }
+
+      if (confirm(`OCR našlo: "${text}"
+
+Přidat do adres?`)) {
+        if (addresses.map(a => a.text.toLowerCase()).includes(text.toLowerCase())) {
+          alert("⚠️ Adresa již existuje."); return;
+        }
+        geocode(text);
+      }
+    }
+
+    function startCamera() {
+      let overlay = document.getElementById("camera-overlay");
+      overlay.style.display = "flex";
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
+        .then(s => { stream = s; document.getElementById("video").srcObject = s; });
     }
 
     function closeCamera() {
