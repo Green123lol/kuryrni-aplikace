@@ -2,15 +2,15 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Kurýrní aplikace v7.5</title>
+  <title>Kurýrní aplikace v7.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: sans-serif; margin: 0; }
     #camera-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
     video { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
     #scan-frame { position: absolute; width: 60%; height: 30%; border: 3px solid #00ff00; z-index: 10000; }
-    #scan-btn, #close-btn { font-size: 20px; padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 8px; z-index: 10001; }
-    #close-btn { position: absolute; top: 10px; right: 10px; background: red; }
+    #scan-btn { position: absolute; bottom: 20px; font-size: 22px; padding: 14px 28px; background: #007bff; color: white; border: none; border-radius: 8px; z-index: 10001; }
+    #close-btn { position: absolute; top: 10px; right: 10px; background: red; color: white; font-size: 20px; padding: 6px 12px; border: none; border-radius: 4px; z-index: 10001; }
     #map { height: 300px; border-bottom: 1px solid #ccc; }
     #camera-btn { display: block; width: 100%; font-size: 20px; padding: 16px 0; background: #007bff; color: white; border: none; }
     .address { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; cursor: pointer; }
@@ -99,15 +99,21 @@
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
-      const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
+      
+      let imageData = ctx.getImageData(0, 0, w, h);
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        let avg = (imageData.data[i] + imageData.data[i+1] + imageData.data[i+2])/3;
+        imageData.data[i] = imageData.data[i+1] = imageData.data[i+2] = avg > 128 ? 255 : 0;
+      }
+      ctx.putImageData(imageData, 0, 0);
 
+      const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
       const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
-      if (!clean) { alert("❌ Nenalezena adresa."); closeCamera(); return; }
+      if (!clean) { alert("❌ Nenalezena adresa."); return; }
       if (addresses.map(a => a.text.toLowerCase()).includes(clean.toLowerCase())) {
         alert("⚠️ Adresa již existuje."); closeCamera(); return;
       }
       geocode(clean);
-      closeCamera();
     }
 
     function closeCamera() {
