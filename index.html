@@ -1,12 +1,24 @@
-
 <!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
   <title>Kurýrní aplikace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    #map { height: 300px; }
+    #addresses { padding: 10px; }
+    .address-item { margin: 5px 0; border: 1px solid #ccc; padding: 5px; border-radius: 6px; }
+  </style>
 </head>
 <body>
-  <h1>Kurýrní aplikace (PWA verze)</h1>
-  <p>Tato aplikace podporuje OCR, GPS, Mapy.cz a přetahování adres.</p>
+  <h2>Kurýrní aplikace</h2>
+  <div id="map">🗺️ Načítám mapu...</div>
+  <div id="addresses">
+    <p>📦 Zde se zobrazí seznam naskenovaných adres.</p>
+  </div>
+  <button onclick="scanLabel()">📷 Spustit foťák (OCR)</button>
+
+  <script src="app.js"></script>
 </body>
 </html>
