@@ -2,23 +2,21 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Kurýrní aplikace</title>
+  <title>Kurýrní aplikace – OCR</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; }
-    #map { height: 300px; }
-    #addresses { padding: 10px; }
-    .address-item { margin: 5px 0; border: 1px solid #ccc; padding: 5px; border-radius: 6px; }
+    body { font-family: sans-serif; margin: 0; padding: 1rem; }
+    video { width: 100%; max-height: 300px; border: 1px solid #ccc; margin-bottom: 1rem; }
+    #addresses .item { border: 1px solid #ccc; margin: 5px 0; padding: 5px; border-radius: 6px; }
   </style>
 </head>
 <body>
-  <h2>Kurýrní aplikace</h2>
-  <div id="map">🗺️ Načítám mapu...</div>
-  <div id="addresses">
-    <p>📦 Zde se zobrazí seznam naskenovaných adres.</p>
-  </div>
-  <button onclick="scanLabel()">📷 Spustit foťák (OCR)</button>
+  <h2>📷 Skenování etiket – OCR</h2>
+  <video id="video" autoplay playsinline></video>
+  <button onclick="captureAndRecognize()">📸 Naskenovat</button>
+  <div id="addresses"></div>
 
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+  <script src="ocr.js"></script>
 </body>
 </html>
