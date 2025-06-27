@@ -2,13 +2,15 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Kurýrní aplikace v7.3</title>
+  <title>Kurýrní aplikace v7.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: sans-serif; margin: 0; }
     #camera-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
-    video { width: 100%; height: 80%; object-fit: cover; }
-    #scan-btn { font-size: 24px; padding: 16px 32px; margin-top: 20px; background: #007bff; color: white; border: none; border-radius: 8px; }
+    video { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; }
+    #scan-frame { position: absolute; width: 60%; height: 30%; border: 3px solid #00ff00; z-index: 10000; }
+    #scan-btn, #close-btn { font-size: 20px; padding: 12px 24px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 8px; z-index: 10001; }
+    #close-btn { position: absolute; top: 10px; right: 10px; background: red; }
     #map { height: 300px; border-bottom: 1px solid #ccc; }
     #camera-btn { display: block; width: 100%; font-size: 20px; padding: 16px 0; background: #007bff; color: white; border: none; }
     .address { margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; cursor: pointer; }
@@ -22,7 +24,9 @@
 
   <div id="camera-overlay">
     <video id="video" autoplay playsinline></video>
+    <div id="scan-frame"></div>
     <button id="scan-btn">📸 Naskenovat nyní</button>
+    <button id="close-btn">✖</button>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -35,22 +39,26 @@
     let markers = [];
     let stream = null;
 
-    function addMarker(lat, lng, text) {
-      const marker = L.marker([lat, lng]).addTo(map).bindPopup(text);
+    function addMarker(lat, lng, text, idx) {
+      const icon = L.divIcon({ className: 'my-div-icon', html: `<b>${idx+1}</b>`, iconSize: [20, 20] });
+      const marker = L.marker([lat, lng], { icon }).addTo(map).bindPopup(text);
       markers.push(marker);
     }
 
     function renderAddresses() {
       document.getElementById("addresses").innerHTML = "";
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
       addresses.forEach((item, idx) => {
         const div = document.createElement("div");
         div.className = "address";
-        div.textContent = item.text;
+        div.textContent = `${idx+1}. ${item.text}`;
         div.onclick = () => {
           map.setView([item.lat, item.lng], 15);
           markers[idx].openPopup();
         };
         document.getElementById("addresses").appendChild(div);
+        addMarker(item.lat, item.lng, item.text, idx);
       });
     }
 
@@ -61,7 +69,6 @@
           if (data && data[0]) {
             const lat = parseFloat(data[0].lat);
             const lng = parseFloat(data[0].lon);
-            addMarker(lat, lng, address);
             addresses.push({ text: address, lat, lng });
             localStorage.setItem("addresses", JSON.stringify(addresses));
             renderAddresses();
@@ -84,10 +91,14 @@
     async function scanOCR() {
       let video = document.getElementById("video");
       const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      const w = video.videoWidth * 0.6;
+      const h = video.videoHeight * 0.3;
+      const x = (video.videoWidth - w) / 2;
+      const y = (video.videoHeight - h) / 2;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0);
+      ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
       const { data: { text } } = await Tesseract.recognize(canvas, 'ces');
 
       const clean = text.replace(/[^A-Za-z0-9á-žÁ-Ž\s\/\-]/g, '').trim();
@@ -109,6 +120,7 @@
 
     document.getElementById("camera-btn").onclick = () => startCamera();
     document.getElementById("scan-btn").onclick = () => scanOCR();
+    document.getElementById("close-btn").onclick = () => closeCamera();
     renderAddresses();
   </script>
 </body>
