@@ -2,16 +2,16 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Kurýrní aplikace – OCR</title>
+  <title>Kurýrní aplikace – OCR (vylepšená)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; }
     video { width: 100%; max-height: 300px; border: 1px solid #ccc; margin-bottom: 1rem; }
-    #addresses .item { border: 1px solid #ccc; margin: 5px 0; padding: 5px; border-radius: 6px; }
+    .item { border: 1px solid #ccc; padding: 6px; margin: 4px 0; border-radius: 5px; background: #f9f9f9; }
   </style>
 </head>
 <body>
-  <h2>📷 Skenování etiket – OCR</h2>
+  <h2>📷 Skenuj etikety – OCR (zadní kamera + čeština)</h2>
   <video id="video" autoplay playsinline></video>
   <button onclick="captureAndRecognize()">📸 Naskenovat</button>
   <div id="addresses"></div>
